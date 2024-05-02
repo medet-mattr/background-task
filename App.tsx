@@ -5,113 +5,75 @@
  * @format
  */
 
-import React from 'react';
-import type {PropsWithChildren} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import React, {useCallback, useState} from 'react';
+import {SafeAreaView, Button, StyleSheet, Text, View} from 'react-native';
+import {Worklets} from 'react-native-worklets-core';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+function test(amount: number) {
+  let val = 0;
+  let i = 0;
+  while (i < amount) {
+    val += Math.sin(amount);
+    i++;
+  }
+  return val;
+}
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
-
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
+function testWorklet(amount: number) {
+  'worklet';
+  let val = 0;
+  let i = 0;
+  while (i < amount) {
+    val += Math.sin(amount);
+    i++;
+  }
+  return val;
 }
 
 function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+  const [count, setCount] = useState(0);
+  const [value, setValue] = useState(0);
+  const [valueWorklet, setValueWorklet] = useState(0);
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
+  const handleIncrease = useCallback(() => {
+    setCount(count + 1);
+  }, [count, setCount]);
+
+  const handleTest = useCallback(async () => {
+    setValue(test(100000000));
+  }, [setValue]);
+
+  const handleTestWorklet = useCallback(async () => {
+    const result = await Worklets.defaultContext.runAsync(() => {
+      'worklet';
+      return testWorklet(100000000);
+    });
+    Worklets.runOnJS(() => setValueWorklet(result));
+  }, [setValueWorklet]);
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
+    <SafeAreaView>
+      <Text>Short operation</Text>
+      <Text>Count: {count}</Text>
+      <Button title="Increase" onPress={handleIncrease} />
+      <View style={styles.divider} />
+      <Text>Long operation</Text>
+      <Text>Result: {value}</Text>
+      <Button title="Run" onPress={handleTest} />
+      <View style={styles.divider} />
+      <Text>Long operation with Worklet</Text>
+      <Text>Result: {valueWorklet}</Text>
+      <Button title="Run with Worklet" onPress={handleTestWorklet} />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  divider: {
+    marginVertical: 10,
+    width: '100%',
+    height: 1,
+    backgroundColor: '#ccc',
   },
 });
 
