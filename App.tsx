@@ -40,13 +40,13 @@ function App(): React.JSX.Element {
   }, [count, setCount]);
 
   const handleTest = useCallback(async () => {
-    setValue(test(100000000));
+    setValue(test(100000000 * Math.random()));
   }, [setValue]);
 
   const handleTestWorklet = useCallback(async () => {
     const result = await Worklets.defaultContext.runAsync(() => {
       'worklet';
-      return testWorklet(100000000);
+      return testWorklet(100000000 * Math.random());
     });
     Worklets.runOnJS(() => setValueWorklet(result));
   }, [setValueWorklet]);
