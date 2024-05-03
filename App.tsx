@@ -30,16 +30,29 @@ function testWorklet(amount: number) {
   return val;
 }
 
+async function testPromise(amount: number): Promise<number> {
+  return new Promise(resolve => {
+    let val = 0;
+    let i = 0;
+    while (i < amount) {
+      val += Math.sin(amount);
+      i++;
+    }
+    resolve(val);
+  });
+}
+
 function App(): React.JSX.Element {
   const [count, setCount] = useState(0);
   const [value, setValue] = useState(0);
   const [valueWorklet, setValueWorklet] = useState(0);
+  const [valuePromise, setValuePromise] = useState(0);
 
   const handleIncrease = useCallback(() => {
     setCount(count + 1);
   }, [count, setCount]);
 
-  const handleTest = useCallback(async () => {
+  const handleTest = useCallback(() => {
     setValue(test(100000000 * Math.random()));
   }, [setValue]);
 
@@ -51,6 +64,11 @@ function App(): React.JSX.Element {
     Worklets.runOnJS(() => setValueWorklet(result));
   }, [setValueWorklet]);
 
+  const handleTestPromise = useCallback(async () => {
+    const val = await testPromise(100000000 * Math.random());
+    setValuePromise(val);
+  }, [setValuePromise]);
+
   return (
     <SafeAreaView>
       <Text>Short operation</Text>
@@ -60,6 +78,10 @@ function App(): React.JSX.Element {
       <Text>Long operation</Text>
       <Text>Result: {value}</Text>
       <Button title="Run" onPress={handleTest} />
+      <View style={styles.divider} />
+      <Text>Long operation with Promise</Text>
+      <Text>Result: {valuePromise}</Text>
+      <Button title="Run" onPress={handleTestPromise} />
       <View style={styles.divider} />
       <Text>Long operation with Worklet</Text>
       <Text>Result: {valueWorklet}</Text>
